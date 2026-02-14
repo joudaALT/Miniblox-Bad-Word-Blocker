@@ -73,11 +73,17 @@
     const SPAM_THRESHOLD = 3;
     const SPAM_TIME_WINDOW = 10000;
     
+    function stripSeparators(text) {
+        return text.replace(/[\s\.\-\_\*\|\~\+\=]/g, '');
+    }
+    
     function containsBadWords(text) {
         const cleanText = text.replace(/\\#[0-9A-Fa-f]{6}\\/g, '')
                              .replace(/\\reset\\/g, '')
                              .replace(/\\glow\\/g, '')
                              .toLowerCase();
+        
+        const strippedText = stripSeparators(cleanText);
         
         for (let word of BAD_WORDS) {
             const wordLower = word.toLowerCase();
@@ -85,6 +91,10 @@
             const regex = new RegExp('(^|[^a-z])' + escapedWord + '($|[^a-z])', 'i');
             
             if (regex.test(cleanText)) {
+                return true;
+            }
+            
+            if (strippedText.includes(wordLower)) {
                 return true;
             }
         }
