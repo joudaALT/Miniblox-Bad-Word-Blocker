@@ -5,7 +5,7 @@
 // @description  Filters profanity, spam, and inappropriate content from game chat
 // @author       joudaALT
 // @match        *://*/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=example.com
+// @icon         https://raw.githubusercontent.com/joudaALT/Miniblox-Bad-Word-Blocker/refs/heads/main/image.png
 // @require      https://raw.githubusercontent.com/joudaALT/Miniblox-Bad-Word-Blocker/refs/heads/main/Function
 // @grant        none
 // @run-at       document-end
