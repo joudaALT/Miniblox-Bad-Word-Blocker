@@ -82,7 +82,7 @@
     const SPAM_TIME_WINDOW = 10000;
     
     function stripBypassCharacters(text) {
-        return text.replace(/[\\\/\.\-\_\*\|\~]/g, '');
+        return text.replace(/[\\\/\.\-\_\*\|\~\s]/g, '');
     }
     
     function containsBadWords(text) {
@@ -100,7 +100,7 @@
                 return true;
             }
             
-            if (strippedText === wordLower) {
+            if (strippedText.includes(wordLower)) {
                 return true;
             }
         }
