@@ -3,26 +3,25 @@
     
     const BAD_WORDS = [
         'fuck', 'fucking', 'fucker', 'fucked', 'fucks', 'motherfucker',
-        'shit', 'shit', 'shitty', 'shitter', 'bullshit',
+        'shit', 'shitty', 'shitter', 'bullshit',
         'bitch', 'bitches', 'bitching', 'bitchy',
-        'ass', 'asshole', 'arse', 'arsehole', 'asses', 'badass',
+        'asshole', 'arse', 'arsehole', 'asses',
         'damn', 'dammit', 'goddamn', 'damned',
-        'hell', 'hella',
         'crap', 'crappy', 'crapping',
         'bastard', 'bastards',
-        'dick', 'dickhead', 'dicks',
+        'dickhead',
         'cock', 'cocks', 'cocksucker',
         'pussy', 'pussies',
-        'piss', 'pissed', 'pissing',
+        'pissed', 'pissing',
         'cunt', 'cunts',
         'twat', 'twats',
         'wanker', 'wank',
         'bollocks', 'bollock',
         'fag', 'faggot', 'fags', 'faggots',
         'dyke', 'dykes',
-        'nigger', 'niggers', 'nigga', 'niggas', 'nig',
-        'retard', 'retarded', 'retards', 'tard',
-        'nazi', 'nazis', 'hitler',
+        'nigger', 'niggers', 'nigga', 'niggas',
+        'retard', 'retarded', 'retards',
+        'nazi', 'nazis',
         'kike', 'kikes',
         'chink', 'chinks',
         'spic', 'spics',
@@ -33,16 +32,9 @@
         'paki', 'pakis',
         'towelhead', 'towelheads',
         'porn', 'porno', 'pornography',
-        'sex', 'sexual', 'sexy',
         'rape', 'raping', 'raped', 'rapist',
         'hentai',
-        'nude', 'nudes', 'naked',
-        'horny',
-        'cum', 'cumming', 'jizz',
-        'penis', 'penises',
-        'vagina', 'vaginas',
-        'boob', 'boobs', 'tit', 'tits', 'titty', 'titties',
-        'whore', 'whores', 'slut', 'sluts', 'hoe', 'hoes',
+        'whore', 'whores', 'slut', 'sluts',
         'fuk', 'fck', 'fuc', 'fucc', 'phuck',
         'sht', 'shyt', 'sh1t',
         'btch', 'b1tch', 'biatch',
@@ -51,7 +43,7 @@
         'cnt', 'c*nt',
         'nigg', 'n1gga', 'n1gger',
         'fvck', 'fxck',
-        'kill yourself', 'kys',
+        'kys',
     ];
     
     const CONFIG = {
@@ -81,26 +73,18 @@
     const SPAM_THRESHOLD = 3;
     const SPAM_TIME_WINDOW = 10000;
     
-    function stripBypassCharacters(text) {
-        return text.replace(/[\\\/\.\-\_\*\|\~\s]/g, '');
-    }
-    
     function containsBadWords(text) {
         const cleanText = text.replace(/\\#[0-9A-Fa-f]{6}\\/g, '')
                              .replace(/\\reset\\/g, '')
-                             .replace(/\\glow\\/g, '');
-        
-        const strippedText = stripBypassCharacters(cleanText).toLowerCase();
+                             .replace(/\\glow\\/g, '')
+                             .toLowerCase();
         
         for (let word of BAD_WORDS) {
             const wordLower = word.toLowerCase();
-            const regex = new RegExp('(^|\\s)' + wordLower + '($|\\s|[^a-z])', 'i');
+            const escapedWord = wordLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp('(^|[^a-z])' + escapedWord + '($|[^a-z])', 'i');
             
-            if (regex.test(strippedText)) {
-                return true;
-            }
-            
-            if (strippedText.includes(wordLower)) {
+            if (regex.test(cleanText)) {
                 return true;
             }
         }
@@ -122,8 +106,7 @@
     }
     
     function isAllCaps(text) {
-        const cleanText = stripBypassCharacters(text);
-        const letters = cleanText.replace(/[^a-zA-Z]/g, '');
+        const letters = text.replace(/[^a-zA-Z]/g, '');
         if (letters.length < 10) return false;
         return letters === letters.toUpperCase();
     }
