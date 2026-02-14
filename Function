@@ -1,0 +1,183 @@
+(function() {
+    'use strict';
+    
+    const BAD_WORDS = [
+        'fuck', 'fucking', 'fucker', 'fucked', 'fucks', 'motherfucker',
+        'shit', 'shit', 'shitty', 'shitter', 'bullshit',
+        'bitch', 'bitches', 'bitching', 'bitchy',
+        'ass', 'asshole', 'arse', 'arsehole', 'asses', 'badass',
+        'damn', 'dammit', 'goddamn', 'damned',
+        'hell', 'hella',
+        'crap', 'crappy', 'crapping',
+        'bastard', 'bastards',
+        'dick', 'dickhead', 'dicks',
+        'cock', 'cocks', 'cocksucker',
+        'pussy', 'pussies',
+        'piss', 'pissed', 'pissing',
+        'cunt', 'cunts',
+        'twat', 'twats',
+        'wanker', 'wank',
+        'bollocks', 'bollock',
+        'fag', 'faggot', 'fags', 'faggots',
+        'dyke', 'dykes',
+        'nigger', 'niggers', 'nigga', 'niggas', 'nig',
+        'retard', 'retarded', 'retards', 'tard',
+        'nazi', 'nazis', 'hitler',
+        'kike', 'kikes',
+        'chink', 'chinks',
+        'spic', 'spics',
+        'wetback', 'wetbacks',
+        'tranny', 'trannies',
+        'gook', 'gooks',
+        'beaner', 'beaners',
+        'paki', 'pakis',
+        'towelhead', 'towelheads',
+        'porn', 'porno', 'pornography',
+        'sex', 'sexual', 'sexy',
+        'rape', 'raping', 'raped', 'rapist',
+        'hentai',
+        'nude', 'nudes', 'naked',
+        'horny',
+        'cum', 'cumming', 'jizz',
+        'penis', 'penises',
+        'vagina', 'vaginas',
+        'boob', 'boobs', 'tit', 'tits', 'titty', 'titties',
+        'whore', 'whores', 'slut', 'sluts', 'hoe', 'hoes',
+        'fuk', 'fck', 'fuc', 'fucc', 'phuck',
+        'sht', 'shyt', 'sh1t',
+        'btch', 'b1tch', 'biatch',
+        'azz', 'a$$', 'a55',
+        'dck', 'd1ck',
+        'cnt', 'c*nt',
+        'nigg', 'n1gga', 'n1gger',
+        'fvck', 'fxck',
+        'kill yourself', 'kys',
+    ];
+    
+    const CONFIG = {
+        blockBadWords: true,
+        blockSpam: true,
+        blockAllCaps: false
+    };
+    
+    const gameRef = {
+        _game: null,
+        get game() {
+            if (this._game) return this._game;
+            const reactRoot = document.querySelector("#react");
+            if (!reactRoot) return null;
+            try {
+                const fiber = Object.values(reactRoot)[0];
+                const game = fiber?.updateQueue?.baseState?.element?.props?.game;
+                if (game) this._game = game;
+                return game;
+            } catch (e) {
+                return null;
+            }
+        }
+    };
+    
+    let messageCache = [];
+    const SPAM_THRESHOLD = 3;
+    const SPAM_TIME_WINDOW = 10000;
+    
+    function stripBypassCharacters(text) {
+        return text.replace(/[\\\/\.\-\_\*\|\~]/g, '');
+    }
+    
+    function containsBadWords(text) {
+        const cleanText = text.replace(/\\#[0-9A-Fa-f]{6}\\/g, '')
+                             .replace(/\\reset\\/g, '')
+                             .replace(/\\glow\\/g, '');
+        
+        const strippedText = stripBypassCharacters(cleanText).toLowerCase();
+        
+        for (let word of BAD_WORDS) {
+            const wordLower = word.toLowerCase();
+            const regex = new RegExp('(^|\\s)' + wordLower + '($|\\s|[^a-z])', 'i');
+            
+            if (regex.test(strippedText)) {
+                return true;
+            }
+            
+            if (strippedText === wordLower) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    function isSpam(text) {
+        const now = Date.now();
+        messageCache = messageCache.filter(m => now - m.time < SPAM_TIME_WINDOW);
+        
+        const similarMessages = messageCache.filter(m => m.text === text);
+        if (similarMessages.length >= SPAM_THRESHOLD - 1) {
+            return true;
+        }
+        
+        messageCache.push({ text, time: now });
+        return false;
+    }
+    
+    function isAllCaps(text) {
+        const cleanText = stripBypassCharacters(text);
+        const letters = cleanText.replace(/[^a-zA-Z]/g, '');
+        if (letters.length < 10) return false;
+        return letters === letters.toUpperCase();
+    }
+    
+    function shouldBlockMessage(chatObj) {
+        if (!chatObj || !chatObj.text) return false;
+        
+        const text = chatObj.text;
+        
+        if (text.includes('Message Blocked!')) {
+            return false;
+        }
+        
+        if (CONFIG.blockBadWords && containsBadWords(text)) {
+            return true;
+        }
+        
+        if (CONFIG.blockSpam && isSpam(text)) {
+            return true;
+        }
+        
+        if (CONFIG.blockAllCaps && isAllCaps(text)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    function installFilter() {
+        const game = gameRef.game;
+        if (!game || !game.chat) {
+            return false;
+        }
+        
+        const originalAddChat = game.chat.addChat;
+        
+        game.chat.addChat = function(chatObj) {
+            if (shouldBlockMessage(chatObj)) {
+                originalAddChat.call(this, {
+                    text: "\\#FF0000\\Message Blocked!\\reset\\"
+                });
+                return;
+            }
+            
+            originalAddChat.call(this, chatObj);
+        };
+        
+        return true;
+    }
+    
+    const waitInterval = setInterval(() => {
+        if (installFilter()) {
+            clearInterval(waitInterval);
+        }
+    }, 500);
+    
+})();
