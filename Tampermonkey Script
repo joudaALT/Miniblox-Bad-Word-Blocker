@@ -1,0 +1,12 @@
+// ==UserScript==
+// @name         Game Chat Filter
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Filters profanity, spam, and inappropriate content from game chat
+// @author       You
+// @match        *://*/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=example.com
+// @require      https://example.com/path/to/your/script.js
+// @grant        none
+// @run-at       document-end
+// ==/UserScript==
